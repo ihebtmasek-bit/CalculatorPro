@@ -1,0 +1,54 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Permet de déclencher manuellement
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+      
+    - name: Build APK Debug
+      run: ./gradlew assembleDebug
+      
+    - name: Build APK Release
+      run: ./gradlew assembleRelease
+      
+    - name: Upload APK Debug
+      uses: actions/upload-artifact@v4
+      with:
+        name: calculator-apk-debug
+        path: app/build/outputs/apk/debug/
+        retention-days: 7
+        
+    - name: Upload APK Release
+      uses: actions/upload-artifact@v4
+      with:
+        name: calculator-apk-release
+        path: app/build/outputs/apk/release/
+        retention-days: 7
+        
+    - name: Build Status
+      run: |
+        echo "✅ Build Android terminé avec succès!"
+        echo "📱 APK disponibles dans les Artifacts"
+        echo "🔗 Dépôt: https://github.com/ihebtmasek-bit/CalculatorPro"
