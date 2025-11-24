@@ -1,11 +1,6 @@
-name: Android Build
+name: Build Signed Android APK and AAB
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Permet de déclencher manuellement
+on: [push]
 
 jobs:
   build:
@@ -15,40 +10,30 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 17
+    - name: Setup Java
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
-      
-    - name: Build APK Debug
-      run: ./gradlew assembleDebug
-      
-    - name: Build APK Release
-      run: ./gradlew assembleRelease
-      
-    - name: Upload APK Debug
-      uses: actions/upload-artifact@v4
-      with:
-        name: calculator-apk-debug
-        path: app/build/outputs/apk/debug/
-        retention-days: 7
-        
-    - name: Upload APK Release
-      uses: actions/upload-artifact@v4
-      with:
-        name: calculator-apk-release
-        path: app/build/outputs/apk/release/
-        retention-days: 7
-        
-    - name: Build Status
+    - name: Generate debug keystore
       run: |
-        echo "✅ Build Android terminé avec succès!"
-        echo "📱 APK disponibles dans les Artifacts"
-        echo "🔗 Dépôt: https://github.com/ihebtmasek-bit/CalculatorPro"
+        keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+        
+    - name: Build signed APK and AAB
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleRelease -Pandroid.injected.signing.store.file=$(pwd)/debug.keystore -Pandroid.injected.signing.store.password=android -Pandroid.injected.signing.key.alias=androiddebugkey -Pandroid.injected.signing.key.password=android
+        ./gradlew bundleRelease
+        
+    - name: Upload signed APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-signed-apk
+        path: app/build/outputs/apk/release/*.apk
+        
+    - name: Upload AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-aab
+        path: app/build/outputs/bundle/release/*.aab
