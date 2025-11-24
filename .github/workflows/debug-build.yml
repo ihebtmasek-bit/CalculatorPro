@@ -1,0 +1,35 @@
+name: Debug Build with Details
+
+on: [push]
+
+jobs:
+  debug-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Show project structure
+      run: |
+        echo "📁 Structure du projet :"
+        find . -name "*.java" -o -name "*.xml" -o -name "*.html" -o -name "*.gradle" | sort
+        echo ""
+        echo "📱 Ressources Android :"
+        find app/src/main/res -type f 2>/dev/null | head -20 || echo "Aucune ressource trouvée"
+        
+    - name: Generate debug keystore
+      run: |
+        keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+        
+    - name: Build with full logs
+      run: |
+        chmod +x gradlew
+        ./gradlew clean
+        ./gradlew assembleDebug --stacktrace --info
