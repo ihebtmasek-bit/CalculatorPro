@@ -12,6 +12,9 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        
+        // Ajouter cette ligne pour éviter les conflits
+        vectorDrawables.useSupportLibrary = true
     }
 
     signingConfigs {
@@ -38,9 +41,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    
+    // Ajouter cette configuration
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }
